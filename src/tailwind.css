@@ -1,9 +1,4 @@
-/*
- * Tailwind v4 entrypoint.
- * Skip preflight to avoid conflicts with Ionic's own CSS reset.
- */
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "tailwindcss";
 
 @theme {
   --color-brand-50: #eef9ff;
