@@ -25,4 +25,66 @@
 
   --radius-card: 1.25rem;
   --shadow-soft: 0 10px 30px -12px rgb(15 23 42 / 0.18);
+
+  /* Custom keyframe animations used on the auth pages.
+     Tailwind v4 generates `animate-<name>` utilities for each entry. */
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-bounce-soft: bounce-soft 3.5s ease-in-out infinite;
+  --animate-slide-up-fade: slide-up-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shimmer: shimmer 3s linear infinite;
+}
+
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(40px, -60px, 0) scale(1.1);
+  }
+  66% {
+    transform: translate3d(-30px, 20px, 0) scale(0.92);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-6deg);
+  }
+  50% {
+    transform: translate3d(6px, -18px, 0) rotate(6deg);
+  }
+}
+
+@keyframes bounce-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

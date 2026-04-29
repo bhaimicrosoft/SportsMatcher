@@ -1,84 +1,148 @@
-<ion-content [fullscreen]="true">
-  <div class="min-h-full flex flex-col bg-gradient-to-b from-brand-50 to-white dark:from-slate-900 dark:to-slate-950">
-    <div class="px-6 pt-12 pb-6 safe-top">
-      <div class="flex items-center gap-3 mb-10">
-        <div class="w-12 h-12 rounded-2xl bg-brand-500 flex items-center justify-center text-white text-2xl font-bold shadow-soft">S</div>
-        <span class="text-xl font-bold text-slate-900 dark:text-white">SportsMatcher</span>
-      </div>
-      <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Welcome back</h1>
-      <p class="text-base text-slate-500 dark:text-slate-400 mt-2">
-        Sign in to find courts and manage your bookings.
-      </p>
+<ion-content [fullscreen]="true" class="auth-page">
+  <div class="relative min-h-full overflow-hidden bg-slate-950 text-white">
+    <!-- Animated gradient blobs -->
+    <div
+      class="pointer-events-none absolute -top-40 -left-40 w-[28rem] h-[28rem] rounded-full bg-brand-500/40 blur-3xl animate-blob"
+    ></div>
+    <div
+      class="pointer-events-none absolute top-32 -right-32 w-[26rem] h-[26rem] rounded-full bg-accent-500/30 blur-3xl animate-blob"
+      style="animation-delay: 3s"
+    ></div>
+    <div
+      class="pointer-events-none absolute -bottom-32 left-1/3 w-[28rem] h-[28rem] rounded-full bg-brand-700/40 blur-3xl animate-blob"
+      style="animation-delay: 6s"
+    ></div>
+
+    <!-- Floating sport emojis (decorative) -->
+    <div class="pointer-events-none absolute inset-0">
+      <span class="absolute top-14 left-6 text-4xl opacity-40 animate-float">🎾</span>
+      <span class="absolute top-28 right-10 text-3xl opacity-50 animate-float-slow" style="animation-delay: 1.2s">🏀</span>
+      <span class="absolute top-52 left-12 text-5xl opacity-30 animate-float" style="animation-delay: 2.4s">🥒</span>
+      <span class="absolute top-44 right-1/4 text-3xl opacity-40 animate-float-slow" style="animation-delay: 0.6s">🏸</span>
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="px-6 flex flex-col gap-4">
-      <label class="block">
-        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Email</span>
-        <input
-          formControlName="email"
-          type="email"
-          autocomplete="email"
-          inputmode="email"
-          placeholder="you@example.com"
-          class="mt-1.5 w-full h-12 px-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        />
-        <p
-          *ngIf="form.controls.email.touched && form.controls.email.invalid"
-          class="text-xs text-red-500 mt-1"
-        >Enter a valid email.</p>
-      </label>
+    <!-- Subtle grid texture -->
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:32px_32px]"
+    ></div>
 
-      <label class="block">
-        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Password</span>
-        <div class="mt-1.5 relative">
-          <input
-            formControlName="password"
-            [type]="showPassword ? 'text' : 'password'"
-            autocomplete="current-password"
-            placeholder="••••••••"
-            class="w-full h-12 px-4 pr-12 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+    <div class="relative flex flex-col min-h-full safe-top safe-bottom">
+      <!-- Hero -->
+      <div class="px-6 pt-12 pb-6 text-center animate-slide-up-fade">
+        <div
+          class="mx-auto w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-4xl font-extrabold shadow-2xl shadow-brand-500/40 animate-bounce-soft"
+        >
+          S
+        </div>
+        <h1 class="mt-6 text-4xl font-extrabold tracking-tight">
+          Sports<span class="text-brand-300">Matcher</span>
+        </h1>
+        <p class="mt-2 text-base text-slate-300">Find your match. Book a court. Play more.</p>
+      </div>
+
+      <!-- Glass card with form -->
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        class="relative mx-4 mt-4 mb-6 rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-xl shadow-2xl shadow-black/40 p-6 animate-slide-up-fade"
+        style="animation-delay: 0.15s"
+      >
+        <h2 class="text-2xl font-bold text-white">Welcome back</h2>
+        <p class="text-sm text-slate-400 mt-1">Sign in to continue</p>
+
+        <div class="mt-6 flex flex-col gap-4">
+          <!-- Email -->
+          <div
+            class="relative group"
+            [class.has-error]="form.controls.email.touched && form.controls.email.invalid"
+          >
+            <ion-icon
+              name="mail-outline"
+              class="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400 group-focus-within:text-brand-300 transition-colors"
+            ></ion-icon>
+            <input
+              formControlName="email"
+              type="email"
+              autocomplete="email"
+              inputmode="email"
+              placeholder="Email address"
+              class="w-full h-13 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:bg-white/10 transition-all duration-200"
+            />
+            <p
+              *ngIf="form.controls.email.touched && form.controls.email.invalid"
+              class="text-xs text-rose-400 mt-1.5 ml-1"
+            >Enter a valid email</p>
+          </div>
+
+          <!-- Password -->
+          <div class="relative group">
+            <ion-icon
+              name="lock-closed-outline"
+              class="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400 group-focus-within:text-brand-300 transition-colors"
+            ></ion-icon>
+            <input
+              formControlName="password"
+              [type]="showPassword ? 'text' : 'password'"
+              autocomplete="current-password"
+              placeholder="Password"
+              class="w-full h-13 pl-12 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:bg-white/10 transition-all duration-200"
+            />
+            <button
+              type="button"
+              (click)="showPassword = !showPassword"
+              class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </button>
+            <p
+              *ngIf="form.controls.password.touched && form.controls.password.invalid"
+              class="text-xs text-rose-400 mt-1.5 ml-1"
+            >At least 6 characters</p>
+          </div>
+
           <button
             type="button"
-            (click)="showPassword = !showPassword"
-            class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400"
+            (click)="forgotPassword()"
+            class="self-end text-sm font-semibold text-brand-300 hover:text-brand-200 transition-colors"
+          >Forgot password?</button>
+
+          <!-- Sign in -->
+          <button
+            type="submit"
+            class="relative h-14 mt-1 rounded-2xl font-semibold text-base text-white overflow-hidden bg-gradient-to-r from-brand-500 via-brand-400 to-brand-500 shadow-lg shadow-brand-500/40 active:scale-[0.98] transition-transform duration-150 [background-size:200%_100%] animate-shimmer"
           >
-            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              Sign in
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </span>
+          </button>
+
+          <!-- Biometric -->
+          <button
+            *ngIf="biometricAvailable && hasBiometricCreds"
+            type="button"
+            (click)="signInBiometric()"
+            class="h-14 rounded-2xl bg-white/5 border border-white/10 text-white font-semibold text-base flex items-center justify-center gap-2 hover:bg-white/10 active:scale-[0.98] transition-all"
+          >
+            <ion-icon name="finger-print-outline" class="text-2xl text-brand-300"></ion-icon>
+            Sign in with biometric
           </button>
         </div>
-        <p
-          *ngIf="form.controls.password.touched && form.controls.password.invalid"
-          class="text-xs text-red-500 mt-1"
-        >At least 6 characters.</p>
-      </label>
+      </form>
 
-      <button
-        type="button"
-        (click)="forgotPassword()"
-        class="self-end text-sm font-semibold text-brand-600 dark:text-brand-400"
-      >Forgot password?</button>
-
-      <button
-        type="submit"
-        class="h-14 rounded-2xl bg-brand-500 text-white font-semibold text-base shadow-soft active:bg-brand-600 transition mt-2"
-      >Sign in</button>
-
-      <button
-        *ngIf="biometricAvailable && hasBiometricCreds"
-        type="button"
-        (click)="signInBiometric()"
-        class="h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold text-base flex items-center justify-center gap-2"
+      <!-- Footer -->
+      <div
+        class="mt-auto px-6 pb-8 text-center animate-slide-up-fade"
+        style="animation-delay: 0.3s"
       >
-        <ion-icon name="finger-print-outline" class="text-xl"></ion-icon>
-        Sign in with biometric
-      </button>
-    </form>
-
-    <div class="mt-auto px-6 pb-10 pt-8 safe-bottom text-center">
-      <p class="text-sm text-slate-600 dark:text-slate-400">
-        New here?
-        <a routerLink="/auth/sign-up" class="font-semibold text-brand-600 dark:text-brand-400 ml-1">Create account</a>
-      </p>
+        <p class="text-sm text-slate-400 mt-10">
+          New to SportsMatcher?
+          <a
+            routerLink="/auth/sign-up"
+            class="font-semibold text-brand-300 hover:text-brand-200 ml-1 transition-colors"
+          >Create account</a>
+        </p>
+      </div>
     </div>
   </div>
 </ion-content>

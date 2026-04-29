@@ -129,6 +129,23 @@ ionic cap run ios -l --external
 ionic cap run android -l --external
 ```
 
+### App icon + splash screen
+
+The brand source is checked in as SVG at [resources/icon.svg](resources/icon.svg) and [resources/splash.svg](resources/splash.svg). Edit those, then run:
+
+```bash
+npm run assets
+```
+
+That script does two things:
+
+1. Rasterizes the SVGs to the PNG sources `@capacitor/assets` expects (`assets/icon-only.png`, `assets/icon-foreground.png`, `assets/icon-background.png`, `assets/splash.png`, `assets/splash-dark.png`).
+2. Invokes `capacitor-assets generate`, which writes every required iOS app-icon size + LaunchScreen.storyboard image, and every Android adaptive-icon density + splash drawable, into `ios/App/App/Assets.xcassets/` and `android/app/src/main/res/`.
+
+After regenerating, run `npx cap sync` so the native projects pick up the new files. The generated PNGs are gitignored — only the SVG sources are tracked.
+
+The runtime splash is configured in [capacitor.config.ts](capacitor.config.ts) (background, fade duration, spinner) and the JS side calls `SplashScreen.hide({ fadeOutDuration: 300 })` from [app.component.ts](src/app/app.component.ts) once Angular bootstraps, so the splash dismisses smoothly even on fast warm starts.
+
 ## Project layout
 
 ```
