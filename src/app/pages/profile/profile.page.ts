@@ -1,9 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { AlertController, ToastController } from '@ionic/angular';
 
 import { AuthService } from '../../services/auth.service';
+import { BookingService } from '../../services/booking.service';
 import { UserProfile } from '../../models/user-profile.model';
 import { Sport, SPORTS } from '../../models/sport.model';
 
@@ -14,11 +15,16 @@ import { Sport, SPORTS } from '../../models/sport.model';
 })
 export class ProfilePage implements OnInit {
   private auth = inject(AuthService);
+  private bookings = inject(BookingService);
   private router = inject(Router);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
 
   profile$: Observable<UserProfile | null> = this.auth.profile$;
+  bookingCount$: Observable<number> = this.bookings
+    .myBookings$()
+    .pipe(map((b) => b.filter((x) => x.status !== 'cancelled').length));
+
   sports = SPORTS;
   biometricAvailable = false;
   biometricEnabled = false;
@@ -26,6 +32,22 @@ export class ProfilePage implements OnInit {
   async ngOnInit() {
     this.biometricAvailable = await this.auth.isBiometricAvailable();
     this.biometricEnabled = await this.auth.hasStoredBiometricCredentials();
+  }
+
+  initial(profile: UserProfile): string {
+    return (profile.displayName || profile.email || '?').charAt(0).toUpperCase();
+  }
+
+  memberSince(profile: UserProfile): string {
+    if (!profile.createdAt) return 'New player';
+    try {
+      return new Date(profile.createdAt).toLocaleDateString(undefined, {
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return 'New player';
+    }
   }
 
   async toggleSportFavorite(profile: UserProfile, sport: Sport) {
@@ -47,9 +69,7 @@ export class ProfilePage implements OnInit {
       const alert = await this.alertCtrl.create({
         header: 'Enable biometric sign-in',
         message: 'Re-enter your password to securely store credentials for FaceID / fingerprint sign-in.',
-        inputs: [
-          { name: 'password', type: 'password', placeholder: 'Password' }
-        ],
+        inputs: [{ name: 'password', type: 'password', placeholder: 'Password' }],
         buttons: [
           { text: 'Cancel', role: 'cancel' },
           {
@@ -61,7 +81,6 @@ export class ProfilePage implements OnInit {
                 return;
               }
               try {
-                // Verify password by re-signing in.
                 await this.auth.signIn(email, data.password);
                 await this.auth.enableBiometric(email, data.password);
                 this.biometricEnabled = true;

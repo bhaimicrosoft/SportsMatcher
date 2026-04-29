@@ -1,14 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map, shareReplay } from 'rxjs';
 import { AlertController, ToastController } from '@ionic/angular';
 
 import { BookingService } from '../../services/booking.service';
 import { Booking } from '../../models/booking.model';
-import { sportMeta } from '../../models/sport.model';
+import { Sport, sportMeta } from '../../models/sport.model';
 
-interface BookingGroup {
-  label: string;
-  items: Booking[];
+type TabId = 'upcoming' | 'past';
+
+interface BookingStats {
+  upcoming: number;
+  past: number;
+  total: number;
 }
 
 @Component({
@@ -21,27 +24,78 @@ export class BookingsPage implements OnInit {
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
 
-  groups$!: Observable<BookingGroup[]>;
+  private readonly tabSubject = new BehaviorSubject<TabId>('upcoming');
+  readonly tab$ = this.tabSubject.asObservable();
   loading = true;
 
+  private bookings$!: Observable<Booking[]>;
+  visible$!: Observable<Booking[]>;
+  stats$!: Observable<BookingStats>;
+
   ngOnInit() {
-    this.groups$ = this.bookings.myBookings$().pipe(
+    this.bookings$ = this.bookings.myBookings$().pipe(
       map((items) => {
         this.loading = false;
-        return this.groupBookings(items);
-      })
+        return items;
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.stats$ = this.bookings$.pipe(map((items) => this.computeStats(items)));
+
+    this.visible$ = combineLatest([this.bookings$, this.tab$]).pipe(
+      map(([items, tab]) => this.filterForTab(items, tab))
     );
   }
 
-  sportLabel(s: any) {
-    return sportMeta(s).label;
+  setTab(tab: TabId) {
+    this.tabSubject.next(tab);
   }
 
-  sportEmoji(s: any) {
+  get currentTab(): TabId {
+    return this.tabSubject.value;
+  }
+
+  sportEmoji(s: Sport) {
     return sportMeta(s).emoji;
   }
 
-  formatTime(iso: string) {
+  /** Tailwind classes for the colored stripe across the top of a card. */
+  sportStripe(s: Sport): string {
+    return {
+      pickleball: 'from-emerald-400 to-emerald-600',
+      tennis: 'from-amber-400 to-amber-600',
+      badminton: 'from-violet-400 to-violet-600',
+      basketball: 'from-orange-400 to-orange-600'
+    }[s];
+  }
+
+  /** Tailwind classes for the sport "badge" (the rounded square with emoji). */
+  sportBadge(s: Sport): string {
+    return {
+      pickleball:
+        'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30',
+      tennis: 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/30',
+      badminton: 'bg-gradient-to-br from-violet-400 to-violet-600 shadow-violet-500/30',
+      basketball: 'bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/30'
+    }[s];
+  }
+
+  formatDate(iso: string): string {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  formatTime(iso: string): string {
+    const d = new Date(iso);
+    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  formatFull(iso: string) {
     return new Date(iso).toLocaleString(undefined, {
       weekday: 'short',
       month: 'short',
@@ -54,7 +108,7 @@ export class BookingsPage implements OnInit {
   async cancel(b: Booking) {
     const alert = await this.alertCtrl.create({
       header: 'Cancel booking?',
-      message: `${b.venueName} · ${this.formatTime(b.startsAt)}`,
+      message: `${b.venueName} · ${this.formatFull(b.startsAt)}`,
       buttons: [
         { text: 'Keep', role: 'cancel' },
         {
@@ -85,19 +139,39 @@ export class BookingsPage implements OnInit {
     await alert.present();
   }
 
-  private groupBookings(items: Booking[]): BookingGroup[] {
+  private computeStats(items: Booking[]): BookingStats {
     const now = Date.now();
-    const upcoming: Booking[] = [];
-    const past: Booking[] = [];
+    let upcoming = 0;
+    let past = 0;
     for (const b of items) {
+      if (b.status === 'cancelled') {
+        past++;
+        continue;
+      }
       const end = new Date(b.startsAt).getTime() + b.durationMinutes * 60_000;
-      if (b.status !== 'cancelled' && end >= now) upcoming.push(b);
-      else past.push(b);
+      if (end >= now) upcoming++;
+      else past++;
     }
-    upcoming.sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
-    const groups: BookingGroup[] = [];
-    if (upcoming.length) groups.push({ label: 'Upcoming', items: upcoming });
-    if (past.length) groups.push({ label: 'Past', items: past });
-    return groups;
+    return { upcoming, past, total: items.length };
+  }
+
+  private filterForTab(items: Booking[], tab: TabId): Booking[] {
+    const now = Date.now();
+    if (tab === 'upcoming') {
+      return items
+        .filter((b) => {
+          if (b.status === 'cancelled') return false;
+          const end = new Date(b.startsAt).getTime() + b.durationMinutes * 60_000;
+          return end >= now;
+        })
+        .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
+    }
+    return items
+      .filter((b) => {
+        if (b.status === 'cancelled') return true;
+        const end = new Date(b.startsAt).getTime() + b.durationMinutes * 60_000;
+        return end < now;
+      })
+      .sort((a, b) => +new Date(b.startsAt) - +new Date(a.startsAt));
   }
 }
