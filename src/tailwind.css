@@ -1,0 +1,33 @@
+/*
+ * Tailwind v4 entrypoint.
+ * Skip preflight to avoid conflicts with Ionic's own CSS reset.
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --color-brand-50: #eef9ff;
+  --color-brand-100: #dcf2ff;
+  --color-brand-200: #b3e5ff;
+  --color-brand-300: #7ad3ff;
+  --color-brand-400: #3bbcff;
+  --color-brand-500: #0ea2ff;
+  --color-brand-600: #0084e0;
+  --color-brand-700: #0068b3;
+  --color-brand-800: #00528f;
+  --color-brand-900: #013f70;
+
+  --color-accent-500: #ff5d3a;
+  --color-accent-600: #e8431f;
+
+  --color-court-tennis: #d68a00;
+  --color-court-pickle: #14a06e;
+  --color-court-badminton: #6c5cff;
+  --color-court-basket: #ef4444;
+
+  --font-display: "Inter", "SF Pro Display", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 10px 30px -12px rgb(15 23 42 / 0.18);
+}

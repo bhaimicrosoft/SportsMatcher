@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.venue {
+  --background: var(--ion-background-color, #ffffff);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

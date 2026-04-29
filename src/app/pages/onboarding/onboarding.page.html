@@ -1,0 +1,49 @@
+<ion-content [fullscreen]="true" class="onboarding">
+  <div class="min-h-full flex flex-col bg-gradient-to-br from-brand-100 via-white to-brand-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+    <div class="flex justify-end p-4 safe-top">
+      <button
+        type="button"
+        (click)="skip()"
+        class="text-sm font-semibold text-slate-600 dark:text-slate-300"
+      >
+        Skip
+      </button>
+    </div>
+
+    <div class="flex-1 flex flex-col items-center justify-center px-8 text-center">
+      <div
+        class="w-40 h-40 rounded-[36px] bg-white shadow-soft flex items-center justify-center text-7xl mb-10 dark:bg-slate-800"
+      >
+        {{ slides[index].emoji }}
+      </div>
+
+      <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-3">
+        {{ slides[index].title }}
+      </h1>
+      <p class="text-base leading-relaxed text-slate-600 dark:text-slate-300 max-w-sm">
+        {{ slides[index].body }}
+      </p>
+
+      <div class="flex gap-2 mt-10">
+        <span
+          *ngFor="let s of slides; let i = index"
+          class="h-1.5 rounded-full transition-all"
+          [class.w-6]="i === index"
+          [class.w-1.5]="i !== index"
+          [class.bg-brand-500]="i === index"
+          [class.bg-slate-300]="i !== index"
+        ></span>
+      </div>
+    </div>
+
+    <div class="px-6 pb-10 safe-bottom">
+      <button
+        type="button"
+        (click)="next()"
+        class="w-full h-14 rounded-2xl bg-brand-500 text-white font-semibold text-base shadow-soft active:bg-brand-600 transition"
+      >
+        {{ index < slides.length - 1 ? 'Next' : 'Get started' }}
+      </button>
+    </div>
+  </div>
+</ion-content>

@@ -1,0 +1,81 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-transparent">
+    <ion-title class="font-bold">My bookings</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="bg-slate-50 dark:bg-slate-950">
+  <div class="px-4 py-2">
+    <ng-container *ngIf="loading">
+      <div class="flex flex-col gap-3">
+        <div *ngFor="let _ of [1,2,3]" class="h-24 rounded-2xl bg-white dark:bg-slate-800 animate-pulse"></div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="(groups$ | async) as groups">
+      <div *ngIf="groups.length === 0 && !loading" class="text-center py-20">
+        <p class="text-5xl mb-3">📅</p>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">No bookings yet</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Find a court and book your first slot.</p>
+        <a
+          routerLink="/tabs/home"
+          class="inline-block mt-6 px-5 py-3 rounded-xl bg-brand-500 text-white font-semibold"
+        >Find courts</a>
+      </div>
+
+      <section *ngFor="let g of groups" class="mb-6">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1 mb-2">
+          {{ g.label }}
+        </h2>
+        <div class="flex flex-col gap-3">
+          <div
+            *ngFor="let b of g.items"
+            class="rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-4"
+            [class.opacity-60]="b.status === 'cancelled'"
+          >
+            <div class="flex items-start gap-3">
+              <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-slate-700 flex items-center justify-center text-2xl">
+                {{ sportEmoji(b.sport) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-semibold text-slate-900 dark:text-white truncate">{{ b.venueName }}</h3>
+                  <span
+                    *ngIf="b.status === 'cancelled'"
+                    class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                  >Cancelled</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ b.venueAddress }}</p>
+                <div class="mt-2 flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+                  <span class="flex items-center gap-1">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    {{ formatTime(b.startsAt) }}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <ion-icon name="time-outline"></ion-icon>
+                    {{ b.durationMinutes }}m
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <ion-icon name="people-outline"></ion-icon>
+                    {{ b.players }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="b.status !== 'cancelled' && g.label === 'Upcoming'" class="flex gap-2 mt-3">
+              <a
+                [routerLink]="['/venue', b.venuePlaceId]"
+                class="flex-1 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-center text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-center"
+              >Details</a>
+              <button
+                type="button"
+                (click)="cancel(b)"
+                class="flex-1 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-sm font-semibold"
+              >Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</ion-content>

@@ -1,0 +1,69 @@
+<ion-content [fullscreen]="true" class="home">
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Map background -->
+  <div #mapEl class="map-canvas"></div>
+
+  <!-- Top header overlay -->
+  <div class="absolute top-0 inset-x-0 px-4 pt-4 safe-top z-10 pointer-events-none">
+    <div class="rounded-2xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-soft px-4 py-3 flex items-center gap-3 pointer-events-auto">
+      <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white text-lg font-bold">S</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ greeting }}</p>
+        <p class="font-semibold text-slate-900 dark:text-white truncate">Find your next match</p>
+      </div>
+      <button
+        type="button"
+        (click)="refresh()"
+        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200"
+      >
+        <ion-icon name="locate-outline"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Sport filter chips -->
+    <div class="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar pointer-events-auto">
+      <app-sport-chip
+        *ngFor="let s of sports"
+        [sport]="s.id"
+        [active]="s.id === selectedSport"
+        (select)="selectSport($event)"
+      ></app-sport-chip>
+    </div>
+  </div>
+
+  <!-- Bottom sheet with results -->
+  <div class="absolute inset-x-0 bottom-0 z-10">
+    <div class="bg-white dark:bg-slate-900 rounded-t-[28px] shadow-[0_-12px_30px_-10px_rgba(15,23,42,0.18)] pt-2 pb-6 max-h-[58vh] overflow-y-auto safe-bottom">
+      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-3"></div>
+
+      <div class="px-5 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">
+            Nearby {{ selectedSportLabel() }}
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            {{ venues.length }} venues · within 10 km
+          </p>
+        </div>
+        <ion-spinner *ngIf="loading" name="dots" color="primary"></ion-spinner>
+      </div>
+
+      <div *ngIf="!loading && venues.length === 0" class="px-5 py-10 text-center">
+        <p class="text-4xl mb-2">🤷</p>
+        <p class="text-slate-600 dark:text-slate-300 font-medium">No courts found nearby.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Try another sport or refresh your location.</p>
+      </div>
+
+      <div class="px-4 pt-3 flex flex-col gap-3">
+        <app-venue-card
+          *ngFor="let v of venues"
+          [venue]="v"
+          (open)="openVenue($event)"
+        ></app-venue-card>
+      </div>
+    </div>
+  </div>
+</ion-content>

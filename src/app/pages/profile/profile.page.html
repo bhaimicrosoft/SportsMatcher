@@ -1,0 +1,102 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-transparent">
+    <ion-title class="font-bold">Profile</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="bg-slate-50 dark:bg-slate-950">
+  <ng-container *ngIf="(profile$ | async) as profile">
+    <!-- Profile header -->
+    <div class="px-5 pt-4">
+      <div class="rounded-[var(--radius-card)] bg-gradient-to-br from-brand-500 to-brand-700 text-white p-5 shadow-soft">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-2xl font-bold">
+            {{ (profile.displayName || profile.email || '?').charAt(0).toUpperCase() }}
+          </div>
+          <div class="min-w-0">
+            <h2 class="text-xl font-bold truncate">{{ profile.displayName || 'Player' }}</h2>
+            <p class="text-sm opacity-90 truncate">{{ profile.email }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favorite sports -->
+    <section class="px-5 pt-6">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">
+        Favorite sports
+      </h3>
+      <div class="rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-3 flex flex-wrap gap-2">
+        <button
+          *ngFor="let s of sports"
+          type="button"
+          (click)="toggleSportFavorite(profile, s.id)"
+          [class]="
+            'flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold border transition ' +
+            (isFav(profile, s.id)
+              ? 'bg-brand-500 text-white border-brand-500'
+              : 'bg-transparent text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700')
+          "
+        >
+          <span>{{ s.emoji }}</span>
+          <span>{{ s.label }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="px-5 pt-6">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">
+        Settings
+      </h3>
+      <div class="rounded-2xl bg-white dark:bg-slate-800 shadow-soft divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
+        <button
+          type="button"
+          (click)="toggleBiometric()"
+          [disabled]="!biometricAvailable"
+          class="w-full px-4 py-4 flex items-center gap-3 text-left disabled:opacity-50"
+        >
+          <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-slate-700 flex items-center justify-center text-brand-600 dark:text-brand-300">
+            <ion-icon name="finger-print-outline" class="text-xl"></ion-icon>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-slate-900 dark:text-white">Biometric sign-in</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              {{ biometricAvailable ? (biometricEnabled ? 'Enabled — tap to disable' : 'Use FaceID / fingerprint') : 'Not available on this device' }}
+            </p>
+          </div>
+          <ion-toggle
+            [checked]="biometricEnabled"
+            [disabled]="!biometricAvailable"
+            (click)="$event.preventDefault()"
+          ></ion-toggle>
+        </button>
+
+        <a
+          routerLink="/tabs/bookings"
+          class="w-full px-4 py-4 flex items-center gap-3"
+        >
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-slate-700 flex items-center justify-center text-emerald-600 dark:text-emerald-300">
+            <ion-icon name="calendar-outline" class="text-xl"></ion-icon>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-slate-900 dark:text-white">My bookings</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">View and manage reservations</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="text-slate-400"></ion-icon>
+        </a>
+
+        <button type="button" (click)="signOut()" class="w-full px-4 py-4 flex items-center gap-3 text-left">
+          <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-300">
+            <ion-icon name="log-out-outline" class="text-xl"></ion-icon>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-rose-600 dark:text-rose-400">Sign out</p>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <div class="text-center text-xs text-slate-400 py-8">SportsMatcher · v0.1.0</div>
+  </ng-container>
+</ion-content>
