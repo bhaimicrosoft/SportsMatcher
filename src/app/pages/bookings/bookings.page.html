@@ -47,31 +47,43 @@
     </div>
   </div>
 
-  <!-- Segmented tab pills -->
+  <!-- Segmented tab pill with sliding indicator -->
   <div class="px-5 mb-4 animate-slide-up-fade" style="animation-delay: 0.1s">
     <div
-      class="flex gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60"
+      class="relative flex p-1.5 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/40 shadow-inner"
     >
+      <!-- Sliding active indicator -->
+      <div
+        class="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-full bg-gradient-to-r from-brand-500 to-brand-600 shadow-lg shadow-brand-500/30 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        [style.transform]="(tab$ | async) === 'past' ? 'translateX(100%)' : 'translateX(0)'"
+      ></div>
+
       <button
         type="button"
         (click)="setTab('upcoming')"
         [class]="
-          'flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 ' +
+          'relative z-10 flex-1 h-10 rounded-full text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors duration-200 ' +
           ((tab$ | async) === 'upcoming'
-            ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-300 shadow-sm'
+            ? 'text-white'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')
         "
-      >Upcoming</button>
+      >
+        <ion-icon name="calendar-outline" class="text-base"></ion-icon>
+        Upcoming
+      </button>
       <button
         type="button"
         (click)="setTab('past')"
         [class]="
-          'flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 ' +
+          'relative z-10 flex-1 h-10 rounded-full text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors duration-200 ' +
           ((tab$ | async) === 'past'
-            ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-300 shadow-sm'
+            ? 'text-white'
             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')
         "
-      >Past</button>
+      >
+        <ion-icon name="time-outline" class="text-base"></ion-icon>
+        Past
+      </button>
     </div>
   </div>
 
@@ -100,14 +112,32 @@
               ? 'Find a court and book your next match in seconds.'
               : 'Your past bookings will appear here once your matches are over.' }}
           </p>
-          <a
+          <button
             *ngIf="currentTab === 'upcoming'"
-            routerLink="/tabs/home"
-            class="inline-flex items-center gap-2 mt-6 px-6 h-12 rounded-2xl bg-gradient-to-r from-brand-500 via-brand-400 to-brand-500 text-white font-semibold shadow-lg shadow-brand-500/40 [background-size:200%_100%] animate-shimmer active:scale-[0.98] transition-transform"
+            type="button"
+            (click)="goFindCourts()"
+            class="active:scale-95 transition-transform"
+            style="
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.5rem;
+              margin-top: 1.5rem;
+              padding: 0 2rem;
+              height: 3.25rem;
+              border: none;
+              border-radius: 1rem;
+              background-color: #0084e0;
+              color: #ffffff;
+              font-weight: 700;
+              font-size: 1rem;
+              box-shadow: 0 8px 20px rgba(8, 132, 224, 0.35);
+              cursor: pointer;
+            "
           >
-            <ion-icon name="search-outline"></ion-icon>
-            Find courts
-          </a>
+            <ion-icon name="search-outline" style="font-size: 1.25rem;"></ion-icon>
+            <span>Find courts</span>
+          </button>
         </div>
 
         <!-- Booking cards -->

@@ -1,6 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Observable, BehaviorSubject, combineLatest, map, shareReplay } from 'rxjs';
+import {
+  Observable,
+  BehaviorSubject,
+  combineLatest,
+  map,
+  shareReplay,
+  tap,
+  catchError,
+  of,
+  startWith
+} from 'rxjs';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 import { BookingService } from '../../services/booking.service';
 import { Booking } from '../../models/booking.model';
@@ -23,6 +34,7 @@ export class BookingsPage implements OnInit {
   private bookings = inject(BookingService);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
+  private router = inject(Router);
 
   private readonly tabSubject = new BehaviorSubject<TabId>('upcoming');
   readonly tab$ = this.tabSubject.asObservable();
@@ -34,22 +46,38 @@ export class BookingsPage implements OnInit {
 
   ngOnInit() {
     this.bookings$ = this.bookings.myBookings$().pipe(
-      map((items) => {
+      tap(() => (this.loading = false)),
+      catchError((err) => {
+        console.error('Bookings stream errored:', err);
         this.loading = false;
-        return items;
+        return of([] as Booking[]);
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    this.stats$ = this.bookings$.pipe(map((items) => this.computeStats(items)));
+    this.stats$ = this.bookings$.pipe(
+      map((items) => this.computeStats(items)),
+      startWith({ upcoming: 0, past: 0, total: 0 })
+    );
 
     this.visible$ = combineLatest([this.bookings$, this.tab$]).pipe(
       map(([items, tab]) => this.filterForTab(items, tab))
     );
+
+    // Hard ceiling: if Firestore takes longer than 4 seconds (or auth is
+    // still hydrating), give up the skeleton and show the empty state so
+    // the user isn't stuck staring at pulsing rectangles.
+    setTimeout(() => {
+      if (this.loading) this.loading = false;
+    }, 4000);
   }
 
   setTab(tab: TabId) {
     this.tabSubject.next(tab);
+  }
+
+  goFindCourts() {
+    this.router.navigateByUrl('/tabs/home');
   }
 
   get currentTab(): TabId {

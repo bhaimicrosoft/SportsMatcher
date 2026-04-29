@@ -38,6 +38,11 @@ export class ProfilePage implements OnInit {
     return (profile.displayName || profile.email || '?').charAt(0).toUpperCase();
   }
 
+  /** Combined count of favorite sports + favorite venues. */
+  favoritesCount(profile: UserProfile): number {
+    return (profile.favoriteSports?.length ?? 0) + (profile.favoriteVenues?.length ?? 0);
+  }
+
   memberSince(profile: UserProfile): string {
     if (!profile.createdAt) return 'New player';
     try {

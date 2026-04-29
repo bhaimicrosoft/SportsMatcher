@@ -6,13 +6,12 @@ import {
   doc,
   query,
   where,
-  orderBy,
   addDoc,
   updateDoc,
-  getDocs,
-  Timestamp
+  getDocs
 } from '@angular/fire/firestore';
-import { Observable, map } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 import { Booking, BookingStatus } from '../models/booking.model';
 import { AuthService } from './auth.service';
@@ -22,13 +21,25 @@ export class BookingService {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(AuthService);
 
-  /** Live stream of the current user's bookings, newest first. */
+  /**
+   * Live stream of the current user's bookings, newest first.
+   * Sorts client-side so we don't need a composite (userId+startsAt)
+   * Firestore index on day one.
+   */
   myBookings$(): Observable<Booking[]> {
     const uid = this.auth.currentUser?.uid;
-    if (!uid) return new Observable<Booking[]>((sub) => sub.next([]));
+    if (!uid) return of([]);
     const ref = collection(this.firestore, 'bookings');
-    const q = query(ref, where('userId', '==', uid), orderBy('startsAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<Booking[]>;
+    const q = query(ref, where('userId', '==', uid));
+    return (collectionData(q, { idField: 'id' }) as Observable<Booking[]>).pipe(
+      map((items) =>
+        [...items].sort((a, b) => +new Date(b.startsAt) - +new Date(a.startsAt))
+      ),
+      catchError((err) => {
+        console.error('Failed to load bookings from Firestore:', err);
+        return of([] as Booking[]);
+      })
+    );
   }
 
   /** Bookings for a venue + sport that overlap a given window. */

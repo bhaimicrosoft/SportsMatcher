@@ -57,29 +57,30 @@
 
     <!-- Stats row -->
     <div
-      class="px-5 -mt-2 grid grid-cols-3 gap-3 animate-slide-up-fade"
+      class="px-5 -mt-2 grid grid-cols-2 gap-3 animate-slide-up-fade"
       style="animation-delay: 0.1s"
     >
-      <div class="rounded-2xl bg-white dark:bg-slate-800/80 p-3 text-center shadow-soft border border-slate-100 dark:border-slate-700/40">
-        <ion-icon name="calendar-outline" class="text-2xl text-brand-500"></ion-icon>
-        <div class="text-xl font-extrabold text-slate-900 dark:text-white mt-1">
-          {{ bookingCount$ | async }}
+      <div class="rounded-2xl bg-white dark:bg-slate-800/80 p-4 flex items-center gap-3 shadow-soft border border-slate-100 dark:border-slate-700/40">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/30 shrink-0">
+          <ion-icon name="calendar-outline" class="text-xl"></ion-icon>
         </div>
-        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bookings</div>
+        <div class="min-w-0">
+          <div class="text-xl font-extrabold text-slate-900 dark:text-white leading-tight">
+            {{ bookingCount$ | async }}
+          </div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Bookings</div>
+        </div>
       </div>
-      <div class="rounded-2xl bg-white dark:bg-slate-800/80 p-3 text-center shadow-soft border border-slate-100 dark:border-slate-700/40">
-        <ion-icon name="heart-outline" class="text-2xl text-rose-500"></ion-icon>
-        <div class="text-xl font-extrabold text-slate-900 dark:text-white mt-1">
-          {{ profile.favoriteVenues?.length || 0 }}
+      <div class="rounded-2xl bg-white dark:bg-slate-800/80 p-4 flex items-center gap-3 shadow-soft border border-slate-100 dark:border-slate-700/40">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center text-white shadow-md shadow-rose-500/30 shrink-0">
+          <ion-icon name="heart-outline" class="text-xl"></ion-icon>
         </div>
-        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Favorites</div>
-      </div>
-      <div class="rounded-2xl bg-white dark:bg-slate-800/80 p-3 text-center shadow-soft border border-slate-100 dark:border-slate-700/40">
-        <ion-icon name="trophy-outline" class="text-2xl text-amber-500"></ion-icon>
-        <div class="text-xl font-extrabold text-slate-900 dark:text-white mt-1">
-          {{ profile.favoriteSports?.length || 0 }}
+        <div class="min-w-0">
+          <div class="text-xl font-extrabold text-slate-900 dark:text-white leading-tight">
+            {{ favoritesCount(profile) }}
+          </div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Favorites</div>
         </div>
-        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Sports</div>
       </div>
     </div>
 
