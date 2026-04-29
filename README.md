@@ -23,12 +23,19 @@ npm install
 
 ### 2. Configure secrets
 
-Edit [src/environments/environment.ts](src/environments/environment.ts) and [src/environments/environment.prod.ts](src/environments/environment.prod.ts) with:
+Copy the template into the real env files (these are gitignored, so your keys stay local):
 
-- A **Firebase web config** (Firebase Console → Project Settings → Your apps → Web app → SDK config).
+```bash
+cp src/environments/environment.example.ts src/environments/environment.ts
+cp src/environments/environment.example.ts src/environments/environment.prod.ts
+```
+
+Then edit both files with:
+
+- A **Firebase web config** (Firebase Console → Project Settings → Your apps → Web app → SDK config). In `environment.prod.ts`, set `production: true`.
 - A **Google Maps API key** with the **Maps JavaScript API** and **Places API** enabled. Restrict it to your domain / app bundle in Google Cloud Console.
 
-> Never commit real keys to a public repo. For production, inject these at CI build time.
+> The real `environment.ts` / `environment.prod.ts` are gitignored. For production, inject these at CI build time from a secret store.
 
 In Firebase Console:
 - Enable **Authentication → Sign-in method → Email/Password**.

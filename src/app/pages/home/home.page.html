@@ -8,29 +8,120 @@
 
   <!-- Top header overlay -->
   <div class="absolute top-0 inset-x-0 px-4 pt-4 safe-top z-10 pointer-events-none">
+    <!-- Greeting + location row -->
     <div class="rounded-2xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-soft px-4 py-3 flex items-center gap-3 pointer-events-auto">
-      <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white text-lg font-bold">S</div>
-      <div class="flex-1 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white text-lg font-bold shrink-0">S</div>
+      <button
+        type="button"
+        (click)="openLocationSearch()"
+        class="flex-1 min-w-0 text-left"
+      >
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ greeting }}</p>
-        <p class="font-semibold text-slate-900 dark:text-white truncate">Find your next match</p>
-      </div>
+        <p class="font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1">
+          <ion-icon name="location-outline" class="text-brand-500 shrink-0"></ion-icon>
+          <span class="truncate">{{ locationLabel }}</span>
+          <ion-icon name="chevron-down-outline" class="text-slate-400 shrink-0 text-sm"></ion-icon>
+        </p>
+      </button>
       <button
         type="button"
         (click)="refresh()"
-        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200"
+        title="Use my GPS location"
+        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 shrink-0"
       >
         <ion-icon name="locate-outline"></ion-icon>
       </button>
     </div>
 
     <!-- Sport filter chips -->
-    <div class="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar pointer-events-auto">
-      <app-sport-chip
-        *ngFor="let s of sports"
-        [sport]="s.id"
-        [active]="s.id === selectedSport"
-        (select)="selectSport($event)"
-      ></app-sport-chip>
+    <div class="mt-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-soft p-2 pointer-events-auto">
+      <div class="grid grid-cols-4 gap-2">
+        <app-sport-chip
+          *ngFor="let s of sports"
+          [sport]="s.id"
+          [active]="s.id === selectedSport"
+          (select)="selectSport($event)"
+        ></app-sport-chip>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location search overlay -->
+  <div
+    *ngIf="searchOpen"
+    class="absolute inset-0 z-30 bg-white dark:bg-slate-950 flex flex-col safe-top safe-bottom"
+  >
+    <div class="px-4 pt-3 pb-2 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+      <button
+        type="button"
+        (click)="closeLocationSearch()"
+        class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-200"
+      >
+        <ion-icon name="arrow-back-outline" class="text-xl"></ion-icon>
+      </button>
+      <div class="flex-1 relative">
+        <ion-icon
+          name="search-outline"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        ></ion-icon>
+        <input
+          #locationInput
+          type="search"
+          inputmode="search"
+          autocomplete="off"
+          [value]="searchQuery"
+          (input)="onSearchInput($any($event.target).value)"
+          placeholder="Search for a city or address"
+          class="w-full h-11 pl-10 pr-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+        <button
+          *ngIf="searchQuery"
+          type="button"
+          (click)="clearSearch()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500"
+        >
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Use current location pill -->
+    <button
+      type="button"
+      (click)="useCurrentLocation()"
+      class="mx-4 mt-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-50 dark:bg-slate-800 text-left active:bg-brand-100 dark:active:bg-slate-700"
+    >
+      <div class="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center text-white">
+        <ion-icon name="locate-outline"></ion-icon>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-slate-900 dark:text-white">Use my current location</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Detect via GPS</p>
+      </div>
+    </button>
+
+    <!-- Suggestions -->
+    <div class="flex-1 overflow-y-auto mt-2">
+      <div *ngIf="suggestionsLoading" class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+        <ion-spinner name="dots" color="primary"></ion-spinner>
+      </div>
+
+      <div *ngIf="!suggestionsLoading && searchQuery && suggestions.length === 0" class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+        No matches. Try a different search.
+      </div>
+
+      <button
+        *ngFor="let s of suggestions"
+        type="button"
+        (click)="selectSuggestion(s)"
+        class="w-full flex items-start gap-3 px-5 py-3 text-left active:bg-slate-100 dark:active:bg-slate-800 border-b border-slate-100 dark:border-slate-800/60"
+      >
+        <ion-icon name="location-outline" class="text-slate-400 mt-1 shrink-0"></ion-icon>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-slate-900 dark:text-white truncate">{{ s.primary }}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ s.secondary }}</p>
+        </div>
+      </button>
     </div>
   </div>
 

@@ -4,10 +4,22 @@ import { GeoPoint, GeolocationService } from './geolocation.service';
 import { Sport, sportMeta } from '../models/sport.model';
 import { Venue } from '../models/venue.model';
 
+export interface PlaceSuggestion {
+  placeId: string;
+  primary: string;
+  secondary: string;
+}
+
+export interface ResolvedPoint extends GeoPoint {
+  address: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlacesService {
   private readonly loader = inject(GoogleMapsLoaderService);
   private placesService: any = null;
+  private autocompleteService: any = null;
+  private autocompleteSessionToken: any = null;
 
   private async ensureService(): Promise<any> {
     if (this.placesService) return this.placesService;
@@ -16,6 +28,85 @@ export class PlacesService {
     const node = document.createElement('div');
     this.placesService = new google.maps.places.PlacesService(node);
     return this.placesService;
+  }
+
+  private async ensureAutocomplete(): Promise<any> {
+    if (this.autocompleteService) return this.autocompleteService;
+    const google = await this.loader.load();
+    this.autocompleteService = new google.maps.places.AutocompleteService();
+    this.autocompleteSessionToken = new google.maps.places.AutocompleteSessionToken();
+    return this.autocompleteService;
+  }
+
+  /**
+   * Live "as-you-type" location suggestions from Google Places Autocomplete.
+   * Reuses an AutocompleteSessionToken across keystrokes for cheaper billing.
+   */
+  async getLocationSuggestions(query: string): Promise<PlaceSuggestion[]> {
+    if (!query || query.trim().length < 2) return [];
+    const google = await this.loader.load();
+    const svc = await this.ensureAutocomplete();
+    return new Promise<PlaceSuggestion[]>((resolve, reject) => {
+      svc.getPlacePredictions(
+        {
+          input: query.trim(),
+          sessionToken: this.autocompleteSessionToken,
+          types: ['geocode']
+        },
+        (predictions: any[] | null, status: string) => {
+          if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            resolve([]);
+            return;
+          }
+          if (status !== google.maps.places.PlacesServiceStatus.OK) {
+            reject(new Error(`Autocomplete failed: ${status}`));
+            return;
+          }
+          resolve(
+            (predictions ?? []).map((p) => ({
+              placeId: p.place_id,
+              primary: p.structured_formatting?.main_text ?? p.description ?? '',
+              secondary: p.structured_formatting?.secondary_text ?? ''
+            }))
+          );
+        }
+      );
+    });
+  }
+
+  /**
+   * Resolve an Autocomplete suggestion to lat/lng + formatted address.
+   * Ends the current session token so the next search starts fresh
+   * (Google bills autocomplete + details together when sharing a token).
+   */
+  async resolvePoint(placeId: string): Promise<ResolvedPoint> {
+    const google = await this.loader.load();
+    const svc = await this.ensureService();
+    const result = await new Promise<any>((resolve, reject) => {
+      svc.getDetails(
+        {
+          placeId,
+          fields: ['geometry', 'formatted_address', 'name'],
+          sessionToken: this.autocompleteSessionToken
+        },
+        (r: any, status: string) => {
+          if (status !== google.maps.places.PlacesServiceStatus.OK) {
+            reject(new Error(`Place lookup failed: ${status}`));
+            return;
+          }
+          resolve(r);
+        }
+      );
+    });
+    // Rotate the session token after a successful resolve.
+    this.autocompleteSessionToken = new google.maps.places.AutocompleteSessionToken();
+    const lat = result.geometry?.location?.lat?.() ?? 0;
+    const lng = result.geometry?.location?.lng?.() ?? 0;
+    return {
+      lat,
+      lng,
+      address: result.formatted_address ?? result.name ?? ''
+    };
   }
 
   /**

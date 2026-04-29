@@ -79,6 +79,9 @@ Thumbs.db
 !.env.example
 google-services.json
 GoogleService-Info.plist
+**/environments/*.ts
+**/environments/*.js
+!**/environments/environment.example.ts
 
 # Claude Code local session state
 .claude/

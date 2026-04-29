@@ -9,9 +9,11 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 import { GeolocationService, GeoPoint } from '../../services/geolocation.service';
-import { PlacesService } from '../../services/places.service';
+import { PlacesService, PlaceSuggestion } from '../../services/places.service';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 import { AuthService } from '../../services/auth.service';
 import { Sport, SPORTS } from '../../models/sport.model';
@@ -25,6 +27,7 @@ import { Venue } from '../../models/venue.model';
 })
 export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapEl', { static: false }) mapEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('locationInput') locationInput?: ElementRef<HTMLInputElement>;
 
   private geo = inject(GeolocationService);
   private places = inject(PlacesService);
@@ -40,15 +43,42 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   userPoint: GeoPoint | null = null;
   greeting = 'Hi there';
 
+  // Location search state
+  locationLabel = 'Current location';
+  searchOpen = false;
+  searchQuery = '';
+  suggestions: PlaceSuggestion[] = [];
+  suggestionsLoading = false;
+
   private map: any = null;
   private markers: any[] = [];
   private userMarker: any = null;
+  private readonly query$ = new Subject<string>();
+  private querySub?: Subscription;
 
   async ngOnInit() {
     this.auth.profile$.subscribe((p) => {
       const name = p?.displayName?.split(' ')[0];
       this.greeting = name ? `Hi, ${name}` : 'Welcome';
     });
+
+    this.querySub = this.query$
+      .pipe(
+        debounceTime(220),
+        distinctUntilChanged(),
+        switchMap(async (q) => {
+          if (!q.trim()) return [];
+          this.suggestionsLoading = true;
+          try {
+            return await this.places.getLocationSuggestions(q);
+          } catch {
+            return [];
+          } finally {
+            this.suggestionsLoading = false;
+          }
+        })
+      )
+      .subscribe((items) => (this.suggestions = items));
   }
 
   async ngAfterViewInit() {
@@ -57,12 +87,14 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.clearMarkers();
+    this.querySub?.unsubscribe();
   }
 
   async loadAndSearch(forceRefreshLocation = false) {
     this.loading = true;
     try {
       this.userPoint = await this.geo.getCurrent(forceRefreshLocation);
+      this.locationLabel = 'Current location';
       await this.initMap(this.userPoint);
       await this.searchSport(this.selectedSport);
     } catch (err: any) {
@@ -92,6 +124,55 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       state: { venue, sport: this.selectedSport }
     });
   }
+
+  // ---------------- Manual location search ----------------
+
+  openLocationSearch() {
+    this.searchOpen = true;
+    this.searchQuery = '';
+    this.suggestions = [];
+    setTimeout(() => this.locationInput?.nativeElement.focus(), 50);
+  }
+
+  closeLocationSearch() {
+    this.searchOpen = false;
+    this.searchQuery = '';
+    this.suggestions = [];
+  }
+
+  onSearchInput(value: string) {
+    this.searchQuery = value;
+    this.query$.next(value);
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.suggestions = [];
+    this.locationInput?.nativeElement.focus();
+  }
+
+  async useCurrentLocation() {
+    this.closeLocationSearch();
+    await this.loadAndSearch(true);
+  }
+
+  async selectSuggestion(s: PlaceSuggestion) {
+    this.loading = true;
+    this.searchOpen = false;
+    try {
+      const point = await this.places.resolvePoint(s.placeId);
+      this.userPoint = { lat: point.lat, lng: point.lng };
+      this.locationLabel = s.primary;
+      await this.initMap(this.userPoint);
+      await this.searchSport(this.selectedSport);
+    } catch (err: any) {
+      this.toast(err?.message ?? 'Could not select location.');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  // ---------------- Map + venues ----------------
 
   private async searchSport(sport: Sport) {
     if (!this.userPoint) return;

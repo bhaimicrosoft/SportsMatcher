@@ -84,7 +84,7 @@
       <!-- Sport -->
       <div class="mt-4">
         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Sport</p>
-        <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div class="grid grid-cols-4 gap-2">
           <app-sport-chip
             *ngFor="let s of sports"
             [sport]="s.id"
