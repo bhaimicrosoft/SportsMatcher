@@ -1,4 +1,27 @@
+/*
+ * Layer order. Tailwind's `@import "tailwindcss"` declares its own
+ * `theme, base, components, utilities` order; we insert an `ionic`
+ * layer between `base` and `components` so Ionic's stylesheet (which
+ * ships unlayered, including a `button { border-radius: 0; padding: 0;
+ * border: 0 }` reset) loses to any Tailwind utility class. Without
+ * this, `rounded-*`, `p-*`, and `border-*` silently fail on every
+ * <button> in the app.
+ */
+@layer theme, base, ionic, components, utilities;
+
 @import "tailwindcss";
+
+@import "@ionic/angular/css/core.css" layer(ionic);
+@import "@ionic/angular/css/normalize.css" layer(ionic);
+@import "@ionic/angular/css/structure.css" layer(ionic);
+@import "@ionic/angular/css/typography.css" layer(ionic);
+@import "@ionic/angular/css/display.css" layer(ionic);
+@import "@ionic/angular/css/padding.css" layer(ionic);
+@import "@ionic/angular/css/float-elements.css" layer(ionic);
+@import "@ionic/angular/css/text-alignment.css" layer(ionic);
+@import "@ionic/angular/css/text-transformation.css" layer(ionic);
+@import "@ionic/angular/css/flex-utils.css" layer(ionic);
+@import "@ionic/angular/css/palettes/dark.system.css" layer(ionic);
 
 @theme {
   --color-brand-50: #eef9ff;

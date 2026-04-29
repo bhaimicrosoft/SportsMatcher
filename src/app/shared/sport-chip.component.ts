@@ -10,7 +10,7 @@ import { Sport, sportMeta } from '../models/sport.model';
       (click)="select.emit(sport)"
       [attr.aria-pressed]="active"
       [class]="
-        'w-full flex flex-col items-center justify-center gap-1 py-2 rounded-xl font-semibold transition-all duration-150 active:scale-[0.97] ' +
+        'w-full flex flex-col items-center justify-center gap-1 py-2.5 rounded-2xl font-semibold transition-all duration-150 active:scale-[0.97] ' +
         (active
           ? 'bg-brand-500 text-white shadow-soft ring-2 ring-brand-300'
           : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600')
