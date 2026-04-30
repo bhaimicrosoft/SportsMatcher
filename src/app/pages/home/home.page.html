@@ -1,4 +1,4 @@
-<ion-content [fullscreen]="true" class="home">
+<ion-content class="home">
   <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -127,8 +127,20 @@
 
   <!-- Bottom sheet with results -->
   <div class="absolute inset-x-0 bottom-0 z-10">
-    <div class="bg-white dark:bg-slate-900 rounded-t-[28px] shadow-[0_-12px_30px_-10px_rgba(15,23,42,0.18)] pt-2 pb-6 max-h-[58vh] overflow-y-auto safe-bottom">
-      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-3"></div>
+    <div
+      class="bg-white dark:bg-slate-900 rounded-t-[28px] shadow-[0_-12px_30px_-10px_rgba(15,23,42,0.18)] pb-6 safe-bottom transition-[max-height] duration-300 ease-out"
+      [ngClass]="sheetExpanded ? 'max-h-[58vh] overflow-y-auto' : 'max-h-[120px] overflow-hidden'"
+    >
+      <button
+        type="button"
+        class="w-full pt-2 pb-2 touch-none"
+        aria-label="Toggle results panel"
+        (pointerdown)="onHandlePointerDown($event)"
+        (pointerup)="onHandlePointerUp($event)"
+        (pointercancel)="onHandlePointerCancel($event)"
+      >
+        <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto"></div>
+      </button>
 
       <div class="px-5 flex items-center justify-between">
         <div>

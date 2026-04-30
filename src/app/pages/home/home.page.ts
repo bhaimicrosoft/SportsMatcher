@@ -43,6 +43,11 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   userPoint: GeoPoint | null = null;
   greeting = 'Hi there';
 
+  // Bottom-sheet (results panel) state
+  sheetExpanded = true;
+  private dragStartY = 0;
+  private dragStartedExpanded = true;
+
   // Location search state
   locationLabel = 'Current location';
   searchOpen = false;
@@ -123,6 +128,33 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/venue', venue.placeId], {
       state: { venue, sport: this.selectedSport }
     });
+  }
+
+  // ---------------- Bottom-sheet drag/tap ----------------
+
+  onHandlePointerDown(ev: PointerEvent) {
+    this.dragStartY = ev.clientY;
+    this.dragStartedExpanded = this.sheetExpanded;
+    (ev.currentTarget as HTMLElement).setPointerCapture(ev.pointerId);
+  }
+
+  onHandlePointerUp(ev: PointerEvent) {
+    const delta = ev.clientY - this.dragStartY;
+    // Treat tiny movement as a tap → toggle.
+    if (Math.abs(delta) < 6) {
+      this.sheetExpanded = !this.sheetExpanded;
+      return;
+    }
+    // Drag down ≥ 40px while expanded → collapse; drag up ≥ 40px while collapsed → expand.
+    if (delta > 40 && this.dragStartedExpanded) {
+      this.sheetExpanded = false;
+    } else if (delta < -40 && !this.dragStartedExpanded) {
+      this.sheetExpanded = true;
+    }
+  }
+
+  onHandlePointerCancel(_ev: PointerEvent) {
+    // No-op; pointer capture release is automatic.
   }
 
   // ---------------- Manual location search ----------------
