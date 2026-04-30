@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!--
+    Android adaptive-icon foreground.
+
+    The launcher composes this layer over a solid brand-blue background
+    (see icon-background.png) and applies its own mask shape (circle,
+    squircle, teardrop, etc.). To survive every mask, content stays inside
+    the center safe zone — Material's spec is roughly the inner 66% of the
+    canvas; we keep the glyph well within that.
+
+    No fill rectangle here — the canvas is intentionally transparent so the
+    Android background layer shows through.
+  -->
+  <defs>
+    <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#003a76" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#ds)">
+    <text x="512" y="544" text-anchor="middle" dominant-baseline="middle"
+          font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-weight="900" font-size="620" fill="#ffffff">S</text>
+  </g>
+</svg>

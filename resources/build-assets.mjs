@@ -6,7 +6,7 @@
  *
  * Run with: npm run assets
  */
-import { readFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -26,12 +26,14 @@ async function svgToPng(svgPath, pngPath, size, background = null) {
 }
 
 console.log('Converting SVG sources to PNG…');
+// iOS / legacy Android launchers use the full square icon (with background).
 await svgToPng(resolve(root, 'resources/icon.svg'), resolve(out, 'icon-only.png'), 1024);
-await svgToPng(
-  resolve(root, 'resources/icon.svg'),
-  resolve(out, 'icon-foreground.png'),
-  1024
-);
+// Android adaptive-icon foreground is a separate transparent SVG so the
+// system background layer can show through and the launcher's mask works
+// correctly. Falls back to icon.svg if the dedicated foreground is missing.
+const fgSvg = resolve(root, 'resources/icon-foreground.svg');
+const fgSource = existsSync(fgSvg) ? fgSvg : resolve(root, 'resources/icon.svg');
+await svgToPng(fgSource, resolve(out, 'icon-foreground.png'), 1024);
 // Solid brand background used by Android adaptive icons.
 await sharp({
   create: {

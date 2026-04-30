@@ -23,5 +23,14 @@ export const environment = {
   googleMaps: {
     // Browser/web key — restrict to your domain in Google Cloud Console.
     apiKey: 'YOUR_GOOGLE_MAPS_BROWSER_KEY'
+  },
+  appCheck: {
+    // reCAPTCHA v3 site key. Register the matching key under
+    // Firebase Console > App Check > Apps > Web.
+    recaptchaSiteKey: 'YOUR_RECAPTCHA_V3_SITE_KEY'
+  },
+  sentry: {
+    // Sentry DSN. Leave empty to disable error reporting in dev.
+    dsn: ''
   }
 };

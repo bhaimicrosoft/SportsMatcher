@@ -42,24 +42,29 @@ export class BookingService {
     );
   }
 
-  /** Bookings for a venue + sport that overlap a given window. */
-  async findConflicts(
+  // Per-user duplicate guard: detects whether THIS user already has an
+  // overlapping booking at the same venue. Rules enforce owner-only reads,
+  // so we always include `userId == auth.uid`. True cross-user inventory
+  // capacity moves to a Cloud Function in Phase 2 (Admin SDK bypasses rules).
+  async findOwnConflicts(
     venuePlaceId: string,
     startsAt: Date,
     durationMinutes: number
   ): Promise<Booking[]> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) return [];
     const startIso = startsAt.toISOString();
     const endIso = new Date(
       startsAt.getTime() + durationMinutes * 60_000
     ).toISOString();
     const ref = collection(this.firestore, 'bookings');
-    // Same-day prefilter; overlap check done client-side.
     const dayStart = new Date(startsAt);
     dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(startsAt);
     dayEnd.setHours(23, 59, 59, 999);
     const q = query(
       ref,
+      where('userId', '==', uid),
       where('venuePlaceId', '==', venuePlaceId),
       where('startsAt', '>=', dayStart.toISOString()),
       where('startsAt', '<=', dayEnd.toISOString())
@@ -81,15 +86,17 @@ export class BookingService {
   ): Promise<string> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) throw new Error('Sign in required to book a court.');
+    // Defense in depth: Firestore rules also enforce email_verified, but
+    // checking client-side gives a friendlier error than a permission-denied.
+    await this.auth.requireVerifiedEmail();
 
-    const conflicts = await this.findConflicts(
+    const conflicts = await this.findOwnConflicts(
       booking.venuePlaceId,
       new Date(booking.startsAt),
       booking.durationMinutes
     );
-    if (conflicts.length >= 3) {
-      // Soft cap: 3 concurrent bookings per venue+slot. Tune as needed.
-      throw new Error('This time slot is already fully booked at this venue.');
+    if (conflicts.length > 0) {
+      throw new Error('You already have a booking that overlaps this time slot at this venue.');
     }
 
     const ref = collection(this.firestore, 'bookings');

@@ -154,10 +154,43 @@ export class VenuePage implements OnInit {
       await sheet.present();
     } catch (err: any) {
       await loading.dismiss();
-      this.toast(err?.message ?? 'Could not complete booking.');
+      if (err?.code === 'auth/email-not-verified') {
+        await this.promptEmailVerification();
+      } else {
+        this.toast(err?.message ?? 'Could not complete booking.');
+      }
     } finally {
       this.submitting = false;
     }
+  }
+
+  private async promptEmailVerification() {
+    const sheet = await this.actionSheetCtrl.create({
+      header: 'Verify your email first',
+      subHeader: 'Booking is locked until you confirm your email address.',
+      buttons: [
+        {
+          text: 'Resend verification email',
+          handler: async () => {
+            try {
+              await this.auth.sendVerificationEmail();
+              this.toast('Verification email sent. Check your inbox.');
+            } catch (err: any) {
+              this.toast(err?.message ?? 'Could not send verification email.');
+            }
+          }
+        },
+        {
+          text: "I've already verified",
+          handler: async () => {
+            const ok = await this.auth.refreshVerificationStatus();
+            this.toast(ok ? 'Verified — try booking again.' : 'Still pending. Check your inbox.');
+          }
+        },
+        { text: 'Cancel', role: 'cancel' }
+      ]
+    });
+    await sheet.present();
   }
 
   private todayIso(): string {

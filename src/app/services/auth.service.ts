@@ -6,6 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
+  reload,
   updateProfile,
   User
 } from '@angular/fire/auth';
@@ -16,7 +18,14 @@ import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { UserProfile } from '../models/user-profile.model';
 import { BiometricService } from './biometric.service';
 
-const BIO_CRED_KEY = 'sm.biometric.credentials';
+const BIO_ENABLED_KEY = 'sm.biometric.enabled';
+
+export class EmailNotVerifiedError extends Error {
+  readonly code = 'auth/email-not-verified';
+  constructor() {
+    super('Please verify your email address before continuing.');
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -50,6 +59,13 @@ export class AuthService {
       await updateProfile(cred.user, { displayName });
     }
     await this.upsertProfile(cred.user, { displayName });
+    // Best-effort verification email at sign-up. If it fails (quota, template
+    // misconfig), the user can resend from the profile page.
+    try {
+      await sendEmailVerification(cred.user);
+    } catch (err) {
+      console.warn('Failed to send verification email at sign-up:', err);
+    }
     return cred.user;
   }
 
@@ -60,11 +76,52 @@ export class AuthService {
 
   async signOut(): Promise<void> {
     await signOut(this.auth);
-    await Preferences.remove({ key: BIO_CRED_KEY });
+    // Disable biometric on sign-out so the next user's session can't be
+    // unlocked by the previous user's enrolled biometry.
+    await Preferences.remove({ key: BIO_ENABLED_KEY });
   }
 
   async resetPassword(email: string): Promise<void> {
     await sendPasswordResetEmail(this.auth, email);
+  }
+
+  // ---------------- Email verification ----------------
+
+  async sendVerificationEmail(): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('Sign in first to send a verification email.');
+    await sendEmailVerification(user);
+  }
+
+  // emailVerified is cached locally; reload() pulls the fresh value from
+  // the Firebase server after the user clicks the email link.
+  async refreshVerificationStatus(): Promise<boolean> {
+    const user = this.currentUser;
+    if (!user) return false;
+    const wasVerified = user.emailVerified;
+    await reload(user);
+    if (user.emailVerified && !wasVerified) {
+      // The email_verified claim flipped server-side. Force a new ID token
+      // so Firestore rules see the updated claim on the next request —
+      // otherwise the cached token (TTL ~1h) still says email_verified=false
+      // and writes get rejected with "Missing or insufficient permissions".
+      await user.getIdToken(true);
+    }
+    return user.emailVerified;
+  }
+
+  async requireVerifiedEmail(): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('Sign in required.');
+    if (!user.emailVerified) {
+      await reload(user);
+      if (user.emailVerified) {
+        await user.getIdToken(true);
+      }
+    }
+    if (!user.emailVerified) {
+      throw new EmailNotVerifiedError();
+    }
   }
 
   // ---------------- Biometric ----------------
@@ -73,46 +130,33 @@ export class AuthService {
     return this.biometric.isAvailable();
   }
 
-  async hasStoredBiometricCredentials(): Promise<boolean> {
-    const { value } = await Preferences.get({ key: BIO_CRED_KEY });
-    return !!value;
+  async isBiometricEnabledOnDevice(): Promise<boolean> {
+    const { value } = await Preferences.get({ key: BIO_ENABLED_KEY });
+    return value === 'true';
   }
 
-  /**
-   * Enable biometric login. Prompts for fingerprint/FaceID and on success
-   * stores the email+password locally (encrypted on iOS Keychain / Android
-   * Keystore via Preferences). Call this AFTER a successful password login.
-   */
-  async enableBiometric(email: string, password: string): Promise<void> {
-    await this.biometric.authenticate('Confirm to enable biometric sign-in');
-    const payload = JSON.stringify({ email, password });
-    await Preferences.set({ key: BIO_CRED_KEY, value: payload });
-    const uid = this.currentUser?.uid;
-    if (uid) {
-      await setDoc(doc(this.firestore, `users/${uid}`), { biometricEnabled: true }, { merge: true });
+  // We store ONLY a boolean flag — never the password. Firebase persists the
+  // auth session via its own secure storage; biometric is a UI-level second
+  // factor that gates app access on launch.
+  async enableBiometric(): Promise<void> {
+    if (!this.currentUser) {
+      throw new Error('Sign in with your password before enabling biometric unlock.');
     }
+    await this.biometric.authenticate('Confirm to enable biometric unlock');
+    await Preferences.set({ key: BIO_ENABLED_KEY, value: 'true' });
   }
 
   async disableBiometric(): Promise<void> {
-    await Preferences.remove({ key: BIO_CRED_KEY });
-    const uid = this.currentUser?.uid;
-    if (uid) {
-      await setDoc(doc(this.firestore, `users/${uid}`), { biometricEnabled: false }, { merge: true });
-    }
+    await Preferences.remove({ key: BIO_ENABLED_KEY });
   }
 
-  /**
-   * Sign in via biometric. Reads stored credentials and re-authenticates
-   * with Firebase. Returns the User on success.
-   */
-  async signInWithBiometric(): Promise<User> {
-    const { value } = await Preferences.get({ key: BIO_CRED_KEY });
-    if (!value) {
-      throw new Error('No biometric credentials stored. Sign in with password first.');
+  async unlockWithBiometric(): Promise<User> {
+    const user = this.currentUser;
+    if (!user) {
+      throw new Error('Your session expired. Please sign in with your password.');
     }
-    await this.biometric.authenticate('Sign in to SportsMatcher');
-    const { email, password } = JSON.parse(value) as { email: string; password: string };
-    return this.signIn(email, password);
+    await this.biometric.authenticate('Unlock SportsMatcher');
+    return user;
   }
 
   // ---------------- Profile ----------------
@@ -134,7 +178,6 @@ export class AuthService {
       photoURL: user.photoURL ?? '',
       favoriteSports: extras.favoriteSports ?? [],
       favoriteVenues: extras.favoriteVenues ?? [],
-      biometricEnabled: extras.biometricEnabled ?? false,
       createdAt: new Date().toISOString()
     };
     await setDoc(doc(this.firestore, `users/${user.uid}`), { ...profile, _serverTs: serverTimestamp() }, { merge: true });

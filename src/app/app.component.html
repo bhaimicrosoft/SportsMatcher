@@ -1,3 +1,51 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
+
+  <!-- Cold-start gate: covers the router-outlet until we've decided whether
+       a biometric unlock is needed. -->
+  <div
+    *ngIf="(state$ | async) === 'evaluating'"
+    class="fixed inset-0 z-[10000] bg-slate-950 flex items-center justify-center"
+  >
+    <div
+      class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-2xl shadow-brand-500/40"
+    >
+      S
+    </div>
+  </div>
+
+  <!-- Locked: persisted session exists but the user must pass biometric. -->
+  <div
+    *ngIf="(state$ | async) === 'locked'"
+    class="fixed inset-0 z-[10000] bg-slate-950 text-white flex flex-col"
+  >
+    <div class="flex-1 flex flex-col items-center justify-center px-8 text-center">
+      <div
+        class="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-4xl font-extrabold shadow-2xl shadow-brand-500/40"
+      >
+        S
+      </div>
+      <h1 class="mt-6 text-2xl font-bold">Welcome back</h1>
+      <p class="mt-2 text-base text-slate-400 max-w-sm">
+        Unlock SportsMatcher with your fingerprint or face to continue.
+      </p>
+
+      <button
+        type="button"
+        (click)="retryUnlock()"
+        class="mt-10 h-14 px-8 rounded-2xl bg-brand-500 text-white font-semibold text-base shadow-lg shadow-brand-500/40 active:scale-[0.98] transition-transform flex items-center gap-2"
+      >
+        <ion-icon name="finger-print-outline" class="text-2xl"></ion-icon>
+        Unlock
+      </button>
+
+      <button
+        type="button"
+        (click)="signOutFromLock()"
+        class="mt-4 h-12 px-6 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+      >
+        Sign out and use password
+      </button>
+    </div>
+  </div>
 </ion-app>

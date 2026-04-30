@@ -20,7 +20,7 @@ export class SignInPage implements OnInit {
 
   showPassword = false;
   biometricAvailable = false;
-  hasBiometricCreds = false;
+  biometricEnabled = false;
 
   form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -29,7 +29,7 @@ export class SignInPage implements OnInit {
 
   async ngOnInit() {
     this.biometricAvailable = await this.auth.isBiometricAvailable();
-    this.hasBiometricCreds = await this.auth.hasStoredBiometricCredentials();
+    this.biometricEnabled = await this.auth.isBiometricEnabledOnDevice();
   }
 
   async submit() {
@@ -43,8 +43,8 @@ export class SignInPage implements OnInit {
     try {
       await this.auth.signIn(email, password);
       await loading.dismiss();
-      if (this.biometricAvailable && !this.hasBiometricCreds) {
-        await this.offerBiometric(email, password);
+      if (this.biometricAvailable && !this.biometricEnabled) {
+        await this.offerBiometric();
       }
       this.router.navigateByUrl('/tabs/home');
     } catch (err: any) {
@@ -55,7 +55,7 @@ export class SignInPage implements OnInit {
 
   async signInBiometric() {
     try {
-      await this.auth.signInWithBiometric();
+      await this.auth.unlockWithBiometric();
       this.router.navigateByUrl('/tabs/home');
     } catch (err: any) {
       this.toast(this.friendlyError(err));
@@ -76,18 +76,18 @@ export class SignInPage implements OnInit {
     }
   }
 
-  private async offerBiometric(email: string, password: string) {
+  private async offerBiometric() {
     const alert = await this.alertCtrl.create({
-      header: 'Enable biometric sign-in?',
-      message: 'Use FaceID or your fingerprint to skip the password next time.',
+      header: 'Enable biometric unlock?',
+      message: 'Use FaceID or your fingerprint to unlock SportsMatcher next time.',
       buttons: [
         { text: 'Not now', role: 'cancel' },
         {
           text: 'Enable',
           handler: async () => {
             try {
-              await this.auth.enableBiometric(email, password);
-              this.toast('Biometric sign-in enabled.');
+              await this.auth.enableBiometric();
+              this.toast('Biometric unlock enabled.');
             } catch {
               this.toast('Biometric setup cancelled.');
             }

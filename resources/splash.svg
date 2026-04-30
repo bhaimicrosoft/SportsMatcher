@@ -1,40 +1,95 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2732 2732">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="50%" r="65%">
-      <stop offset="0%" stop-color="#0e1a3a"/>
-      <stop offset="100%" stop-color="#0b1120"/>
+    <!-- Cinematic deep-space background -->
+    <radialGradient id="bg" cx="50%" cy="46%" r="80%">
+      <stop offset="0%" stop-color="#0f2351"/>
+      <stop offset="48%" stop-color="#08122c"/>
+      <stop offset="100%" stop-color="#03060f"/>
     </radialGradient>
-    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#3bbcff"/>
-      <stop offset="100%" stop-color="#0068b3"/>
+
+    <!-- Logo card: cyan → ocean-blue diagonal -->
+    <linearGradient id="card" x1="0.12" y1="0" x2="0.88" y2="1">
+      <stop offset="0%" stop-color="#6ad6ff"/>
+      <stop offset="55%" stop-color="#1ea5ff"/>
+      <stop offset="100%" stop-color="#01509f"/>
     </linearGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="48" result="b"/>
-      <feMerge>
-        <feMergeNode in="b"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+
+    <!-- Top specular highlight -->
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.50"/>
+      <stop offset="38%" stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Bottom shading for 3D depth -->
+    <linearGradient id="shade" x1="0" y1="0.55" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.24"/>
+    </linearGradient>
+
+    <!-- Soft bloom for ambient glow -->
+    <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="90"/>
     </filter>
+
+    <!-- Drop shadow with brand-matched flood color -->
+    <filter id="cardShadow" x="-100%" y="-100%" width="300%" height="300%">
+      <feDropShadow dx="0" dy="56" stdDeviation="110" flood-color="#005ec4" flood-opacity="0.62"/>
+    </filter>
+
+    <!-- Subtle court line motif at the bottom edge -->
+    <linearGradient id="courtFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5dd0ff" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#5dd0ff" stop-opacity="0.25"/>
+    </linearGradient>
   </defs>
 
+  <!-- Backplate -->
   <rect width="2732" height="2732" fill="url(#bg)"/>
 
-  <!-- Brand glow blobs -->
-  <circle cx="600" cy="700" r="500" fill="#0ea2ff" fill-opacity="0.18" filter="url(#glow)"/>
-  <circle cx="2100" cy="2000" r="600" fill="#ff5d3a" fill-opacity="0.14" filter="url(#glow)"/>
+  <!-- Atmospheric color blooms (gives the screen depth without literal imagery) -->
+  <circle cx="580" cy="700" r="840" fill="#0ea5ff" fill-opacity="0.32" filter="url(#bloom)"/>
+  <circle cx="2180" cy="2080" r="720" fill="#ff5d3a" fill-opacity="0.20" filter="url(#bloom)"/>
 
-  <!-- Centered S logo -->
-  <g transform="translate(1366 1280)">
-    <rect x="-220" y="-220" width="440" height="440" rx="100" fill="url(#logo)"/>
-    <text x="0" y="40" text-anchor="middle" dominant-baseline="middle"
-          font-family="Inter, system-ui, sans-serif" font-weight="800"
-          font-size="320" fill="#ffffff">S</text>
+  <!-- Pulse rings centred on the logo (suggests motion/energy in a static asset) -->
+  <g transform="translate(1366 1180)">
+    <circle r="440" fill="none" stroke="#6ad6ff" stroke-width="2.5" stroke-opacity="0.22"/>
+    <circle r="620" fill="none" stroke="#6ad6ff" stroke-width="2" stroke-opacity="0.14"/>
+    <circle r="820" fill="none" stroke="#6ad6ff" stroke-width="2" stroke-opacity="0.075"/>
+    <circle r="1050" fill="none" stroke="#6ad6ff" stroke-width="2" stroke-opacity="0.035"/>
   </g>
 
-  <text x="1366" y="1720" text-anchor="middle"
-        font-family="Inter, system-ui, sans-serif" font-weight="800"
-        font-size="120" fill="#ffffff" letter-spacing="-2">SportsMatcher</text>
-  <text x="1366" y="1820" text-anchor="middle"
-        font-family="Inter, system-ui, sans-serif" font-weight="500"
-        font-size="56" fill="#7ad3ff" opacity="0.85">Find your match</text>
+  <!-- Faint court-line horizon at the bottom edge (very subtle) -->
+  <g opacity="0.55">
+    <line x1="0" y1="2380" x2="2732" y2="2380" stroke="url(#courtFade)" stroke-width="2"/>
+    <line x1="1366" y1="2380" x2="1366" y2="2580" stroke="#5dd0ff" stroke-opacity="0.18" stroke-width="2"/>
+    <circle cx="1366" cy="2480" r="60" fill="none" stroke="#5dd0ff" stroke-opacity="0.18" stroke-width="2"/>
+  </g>
+
+  <!-- Hero logo card with depth -->
+  <g transform="translate(1366 1180)">
+    <g filter="url(#cardShadow)">
+      <rect x="-295" y="-295" width="590" height="590" rx="138" fill="url(#card)"/>
+    </g>
+    <!-- top gloss -->
+    <rect x="-295" y="-295" width="590" height="590" rx="138" fill="url(#gloss)"/>
+    <!-- bottom shade -->
+    <rect x="-295" y="-295" width="590" height="590" rx="138" fill="url(#shade)"/>
+    <!-- rim light -->
+    <rect x="-295" y="-295" width="590" height="590" rx="138" fill="none" stroke="#ffffff" stroke-opacity="0.26" stroke-width="3"/>
+    <!-- "S" wordmark glyph -->
+    <text x="0" y="60" text-anchor="middle" dominant-baseline="middle"
+          font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+          font-weight="900" font-size="440" fill="#ffffff">S</text>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="1366" y="1840" text-anchor="middle"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-weight="900" font-size="174" fill="#ffffff" letter-spacing="-5">SportsMatcher</text>
+
+  <!-- Tagline -->
+  <text x="1366" y="1962" text-anchor="middle"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-weight="500" font-size="58" fill="#7ad3ff" opacity="0.86" letter-spacing="14">FIND&#160;&#160;·&#160;&#160;BOOK&#160;&#160;·&#160;&#160;PLAY</text>
 </svg>

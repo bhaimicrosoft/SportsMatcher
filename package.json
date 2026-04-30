@@ -38,6 +38,7 @@
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "8.0.2",
     "@ionic/angular": "^8.0.0",
+    "@sentry/angular": "^10.0.0",
     "firebase": "^11.10.0",
     "ionicons": "^7.0.0",
     "rxfire": "^6.1.0",

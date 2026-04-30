@@ -28,10 +28,33 @@ export class ProfilePage implements OnInit {
   sports = SPORTS;
   biometricAvailable = false;
   biometricEnabled = false;
+  emailVerified = true;
+  resendingVerification = false;
 
   async ngOnInit() {
     this.biometricAvailable = await this.auth.isBiometricAvailable();
-    this.biometricEnabled = await this.auth.hasStoredBiometricCredentials();
+    this.biometricEnabled = await this.auth.isBiometricEnabledOnDevice();
+    // Pull fresh verification status from Firebase rather than trusting
+    // the locally-cached User object.
+    this.emailVerified = await this.auth.refreshVerificationStatus();
+  }
+
+  async resendVerification() {
+    if (this.resendingVerification) return;
+    this.resendingVerification = true;
+    try {
+      await this.auth.sendVerificationEmail();
+      this.toast('Verification email sent. Check your inbox.');
+    } catch (err: any) {
+      this.toast(err?.message ?? 'Could not send verification email.');
+    } finally {
+      this.resendingVerification = false;
+    }
+  }
+
+  async checkVerificationStatus() {
+    this.emailVerified = await this.auth.refreshVerificationStatus();
+    this.toast(this.emailVerified ? 'Email verified — you are all set!' : 'Still pending. Check your inbox.');
   }
 
   initial(profile: UserProfile): string {
@@ -69,35 +92,17 @@ export class ProfilePage implements OnInit {
     if (this.biometricEnabled) {
       await this.auth.disableBiometric();
       this.biometricEnabled = false;
-      this.toast('Biometric sign-in disabled.');
-    } else {
-      const alert = await this.alertCtrl.create({
-        header: 'Enable biometric sign-in',
-        message: 'Re-enter your password to securely store credentials for FaceID / fingerprint sign-in.',
-        inputs: [{ name: 'password', type: 'password', placeholder: 'Password' }],
-        buttons: [
-          { text: 'Cancel', role: 'cancel' },
-          {
-            text: 'Enable',
-            handler: async (data) => {
-              const email = this.auth.currentUser?.email;
-              if (!email || !data?.password) {
-                this.toast('Password required.');
-                return;
-              }
-              try {
-                await this.auth.signIn(email, data.password);
-                await this.auth.enableBiometric(email, data.password);
-                this.biometricEnabled = true;
-                this.toast('Biometric sign-in enabled.');
-              } catch (err: any) {
-                this.toast(err?.message ?? 'Could not enable biometric.');
-              }
-            }
-          }
-        ]
-      });
-      await alert.present();
+      this.toast('Biometric unlock disabled.');
+      return;
+    }
+    try {
+      // No password re-entry: biometric just gates access to the existing
+      // Firebase session. Confirming the prompt is enough.
+      await this.auth.enableBiometric();
+      this.biometricEnabled = true;
+      this.toast('Biometric unlock enabled.');
+    } catch (err: any) {
+      this.toast(err?.message ?? 'Biometric setup cancelled.');
     }
   }
 

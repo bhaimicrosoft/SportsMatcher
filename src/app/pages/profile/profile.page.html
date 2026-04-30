@@ -55,6 +55,42 @@
       </div>
     </div>
 
+    <!-- Email verification banner -->
+    <div *ngIf="!emailVerified" class="px-5 -mt-2 mb-2 animate-slide-up-fade">
+      <div
+        class="rounded-2xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 p-4 flex items-start gap-3"
+      >
+        <div
+          class="w-9 h-9 shrink-0 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-300"
+        >
+          <ion-icon name="mail-unread-outline" class="text-lg"></ion-icon>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-amber-800 dark:text-amber-200">Verify your email</p>
+          <p class="text-xs text-amber-700/80 dark:text-amber-200/70 mt-0.5">
+            Booking is locked until you click the link we sent to {{ profile.email }}.
+          </p>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <button
+              type="button"
+              (click)="resendVerification()"
+              [disabled]="resendingVerification"
+              class="text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-500 text-white disabled:opacity-60"
+            >
+              {{ resendingVerification ? 'Sending…' : 'Resend email' }}
+            </button>
+            <button
+              type="button"
+              (click)="checkVerificationStatus()"
+              class="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 dark:bg-slate-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40"
+            >
+              I&rsquo;ve verified
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Stats row -->
     <div
       class="px-5 -mt-2 grid grid-cols-2 gap-3 animate-slide-up-fade"

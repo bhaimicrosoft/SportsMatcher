@@ -38,18 +38,26 @@ export class SignUpPage {
       await this.auth.signUp(email, password, name);
       await loading.dismiss();
 
+      const verifyToast = await this.toastCtrl.create({
+        message: `We sent a verification link to ${email}. Verify your email to start booking.`,
+        duration: 4500,
+        position: 'top',
+        color: 'dark'
+      });
+      await verifyToast.present();
+
       const bioAvailable = await this.auth.isBiometricAvailable();
       if (bioAvailable) {
         const alert = await this.alertCtrl.create({
-          header: 'Quick sign-in next time?',
-          message: 'Use FaceID or your fingerprint to sign in faster on this device.',
+          header: 'Quick unlock next time?',
+          message: 'Use FaceID or your fingerprint to unlock SportsMatcher on this device.',
           buttons: [
             { text: 'Skip', role: 'cancel' },
             {
               text: 'Enable',
               handler: async () => {
                 try {
-                  await this.auth.enableBiometric(email, password);
+                  await this.auth.enableBiometric();
                 } catch {}
               }
             }
