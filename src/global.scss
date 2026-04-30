@@ -19,6 +19,27 @@ ion-content {
   --background: transparent;
 }
 
+/*
+ * Tab bar styling. Must be opaque (not bg-white/85) — when the Home page's
+ * bottom sheet expands, its white background sits directly above the tab bar
+ * and a translucent bar disappears into the sheet. We also bump z-index so
+ * the bar is never covered by absolutely-positioned page overlays, and add a
+ * soft top shadow for visual separation from the sheet above.
+ */
+.app-tab-bar {
+  --background: #ffffff;
+  --border: 1px solid rgb(226 232 240); /* slate-200 */
+  box-shadow: 0 -6px 18px -10px rgb(15 23 42 / 0.18);
+  z-index: 20;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-tab-bar {
+    --background: rgb(15 23 42); /* slate-900 */
+    --border: 1px solid rgb(51 65 85); /* slate-700 */
+  }
+}
+
 /* Safe-area helpers (Tailwind utilities don't include these by default). */
 .safe-top {
   padding-top: max(env(safe-area-inset-top), 0.75rem);
